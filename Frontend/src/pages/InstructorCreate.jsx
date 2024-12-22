@@ -3,6 +3,7 @@ import { toast, Toaster } from "react-hot-toast";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, firedb } from "../FireBase/Firebase"; // Firestore config
 import { collection, addDoc, setDoc, doc } from "firebase/firestore"; // Firestore imports
+import axios from "axios";
 
 const InstructorRegister = () => {
   const [fullName, setFullName] = useState("");
@@ -38,27 +39,19 @@ const InstructorRegister = () => {
       // Create a unique email by appending a timestamp
       const uniqueEmail = `${userID}@example.com`;
 
-      // Register the user with Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        uniqueEmail,
-        password
-      );
-      const user = userCredential.user;
+      const data = {
+        name: fullName,
+        phone: phoneNumber,
+        password,
+        userId: userID,
+        role: "instructor",
+      };
 
-      // Save instructor data in Firestore under "instructors" collection
-      await addDoc(collection(firedb, "instructors"), {
-        fullName,
-        phoneNumber,
-        userID,
-        uid: user.uid, // Firebase Auth user ID
-      });
+      console.log("Instructer data:", data);
 
-      // Save user role data in "users" collection with role "instructor"
-      await setDoc(doc(firedb, "users", user.uid), {
-        uid: user.uid,
-        userRole: "instructor",
-      });
+      const res = await axios.post("http://localhost:3000/api/users", data);
+
+      console.log("Instructor registered:", res);
 
       // Reset input fields after successful registration
       setFullName("");

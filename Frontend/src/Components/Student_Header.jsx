@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getAuth, signOut } from "firebase/auth";
-import { useAuth } from "../AuthContext";
 
 const StudentHeader = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Call the useAuth hook at the top level of the component
-  const { setUser, setRole } = useAuth();
 
   const handleLogout = async () => {
     try {

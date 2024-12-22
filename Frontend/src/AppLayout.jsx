@@ -1,5 +1,4 @@
 import React from "react";
-import { useAuth } from "./AuthContext";
 import { useLocation } from "react-router-dom";
 
 import AdminHeader from "./Components/Admin_Header";
@@ -8,21 +7,26 @@ import InstructorHeader from "./Components/Instructor_header";
 import InstructorFooter from "./Components/Instructor_Footer";
 import StudentHeader from "./Components/Student_Header";
 import StudentFooter from "./Components/Student_Footer";
+import { useAuth } from "./context/AuthContext";
 
 const AppLayout = ({ children }) => {
-  const { role, loading } = useAuth();
+
+  const { getCurrentUser } = useAuth();
+
+  const role = getCurrentUser().role;
+  
   const location = useLocation();
 
   const noHeaderFooterRoutes = ["/login", "/register"];
   const hideHeaderFooter = noHeaderFooterRoutes.includes(location.pathname);
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 flex justify-center items-center bg-gray-100 bg-opacity-50">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-75"></div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="fixed inset-0 flex justify-center items-center bg-gray-100 bg-opacity-50">
+  //       <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-75"></div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoutes"; // Role-based protection
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./context/AuthContext";
 
 // Pages
 import Login from "../src/pages/Login";
@@ -18,7 +18,9 @@ import Register from "../src/pages/Register";
 import AddResult from "./pages/AddResult";
 
 const AppRoutes = () => {
-  const { role } = useAuth();
+  const { getCurrentUser } = useAuth();
+
+  const role = getCurrentUser().role;
 
   return (
     <Routes>

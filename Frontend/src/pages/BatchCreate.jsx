@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { firedb } from '../FireBase/Firebase'; // Adjust path as necessary
 import { collection, addDoc, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
+import axios from 'axios';
 
 const CreateBatch = () => {
   const [year, setYear] = useState('');
@@ -29,6 +30,8 @@ const CreateBatch = () => {
     e.preventDefault();
     const batch = { year, day, medium };
 
+    console.log(batch);
+
     if (isEditing) {
       // If editing, update the existing batch in Firestore
       const batchRef = doc(firedb, 'batches', batches[editingIndex].id);
@@ -38,9 +41,10 @@ const CreateBatch = () => {
       setBatches(updatedBatches);
       setIsEditing(false);
     } else {
-      // If creating a new batch, add to Firestore
-      const docRef = await addDoc(collection(firedb, 'batches'), batch);
-      setBatches([...batches, { id: docRef.id, ...batch }]);
+      // If creating a new batch
+      const res = await axios("http://localhost:3000/api/batch", batch);
+      console.log("batch response: ", res);
+      // setBatches([...batches, { id: docRef.id, ...batch }]);
     }
     resetForm(); // Reset form fields
   };

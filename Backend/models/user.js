@@ -13,7 +13,6 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
     minlength: 3,
     maxlength: 50,
   },
@@ -31,7 +30,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: "user",
+    default: "student",
   },
 });
 
@@ -50,8 +49,8 @@ const User = mongoose.model("User", userSchema);
 function validateAdmin(user) {
   const schema = Joi.object({
     name: Joi.string().min(3).max(50),
-    email: Joi.string().min(3).max(50).required(),
-    password: Joi.string().min(3).max(255),
+    email: Joi.string().min(3).max(50),
+    password: Joi.string().min(3).max(255).required(),
     school: Joi.string(),
     batch: Joi.string(),
     phone: Joi.string(),

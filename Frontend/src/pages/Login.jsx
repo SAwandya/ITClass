@@ -6,12 +6,15 @@ import { toast, Toaster } from "react-hot-toast"; // Import toast for notificati
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Loader from "../Components/preloader"; // Import your preloader component
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [userID, setUserID] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false); // State to manage loader visibility
   const navigate = useNavigate(); // Initialize the useNavigate hook
+
+  const { login } = useAuth(); // Initialize the useAuth hook
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,11 +29,14 @@ const Login = () => {
         email: userID,
         password: password,
       });
+
+      login(res.data); // Login the user
+
       console.log("Login successful:", res);
       toast.success("Login successful!"); // Notify the user
       
       // Redirect the user after successful login
-      // navigate("/dashboard"); 
+      navigate("/dashboard"); 
     } catch (error) {
       console.error("Login failed:", error);
       toast.error("Login failed. Please check your credentials and try again."); // Notify the user of the error
