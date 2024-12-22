@@ -20,7 +20,6 @@ export const AuthProvider = ({ children }) => {
       if (currentUser) {
         const userDocRef = doc(firedb, "users", currentUser.uid);
         const userDoc = await getDoc(userDocRef);
-        console.log("UserDoc:", userDoc.data());
         if (userDoc.exists()) {
           setRole(userDoc.data().userRole || "guest");
         } else {

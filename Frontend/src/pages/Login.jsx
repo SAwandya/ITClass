@@ -5,6 +5,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { toast, Toaster } from "react-hot-toast"; // Import toast for notifications
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Loader from "../Components/preloader"; // Import your preloader component
+import axios from "axios";
 
 const Login = () => {
   const [userID, setUserID] = useState("");
@@ -21,12 +22,15 @@ const Login = () => {
 
     try {
       // Sign in the user with Firebase Authentication
-      const res = await signInWithEmailAndPassword(auth, uniqueEmail, password);
-      console.log("Login successful:", res.user);
+      const res = await axios.post("http://localhost:3000/api/auth", {
+        email: userID,
+        password: password,
+      });
+      console.log("Login successful:", res);
       toast.success("Login successful!"); // Notify the user
       
       // Redirect the user after successful login
-      navigate("/dashboard"); // Redirect to the StudentProfile page
+      // navigate("/dashboard"); 
     } catch (error) {
       console.error("Login failed:", error);
       toast.error("Login failed. Please check your credentials and try again."); // Notify the user of the error

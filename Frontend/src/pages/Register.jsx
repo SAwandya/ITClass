@@ -7,6 +7,7 @@ import { collection, addDoc, doc, getDoc, setDoc } from "firebase/firestore"; //
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Loader from "../Components/preloader"; // Import your preloader component
 import { getDocs } from "firebase/firestore";
+import axios from "axios";
 const Register = () => {
   const [fullName, setFullName] = useState("");
   const [batch, setBatch] = useState("");
@@ -26,7 +27,6 @@ const Register = () => {
       querySnapshot.forEach((doc) => {
         batchesArray.push({ id: doc.id, ...doc.data() });
       });
-      console.log("Batches:", batchesArray);
       setBatchArray(batchesArray);
     } catch (error) {
       console.error("Failed to fetch batches:", error);
@@ -93,35 +93,24 @@ const Register = () => {
       return;
     }
 
-    setLoading(true);
+    const generatedUserID = await generateUserID(batch);
+
+    const data = {
+      userId: generatedUserID,
+      name: fullName,
+      email,
+      password,
+      school,
+      batch,
+      phone: phoneNumber,
+    };
 
     try {
-      const generatedUserID = await generateUserID(batch);
-
       const uniqueEmail = `${generatedUserID}@example.com`;
 
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        uniqueEmail,
-        password
-      );
-      
-      const user = userCredential.user;
+      const res = await axios.post("http://localhost:3000/api/users", data)
 
-      await addDoc(collection(firedb, "students"), {
-        fullName,
-        batch,
-        phoneNumber,
-        school,
-        email,
-        userID: generatedUserID,
-        uid: user.uid,
-      });
-
-      await setDoc(doc(firedb, "users", user.uid), {
-        uid: user.uid,
-        userRole: "student",
-      });
+      console.log("Response:", res);
 
       setFullName("");
       setBatch("");
