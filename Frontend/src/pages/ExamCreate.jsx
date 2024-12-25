@@ -9,6 +9,9 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import toast from "react-hot-toast/headless";
+import useBatches from "../hooks/useBatches";
+import axios from "axios";
+import useExams from "../hooks/useExams";
 
 const ExamCreate = () => {
   const [examName, setExamName] = useState("");
@@ -20,53 +23,47 @@ const ExamCreate = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [batchArray, setBatchArray] = useState([]);
+  const [error, setError] = useState(null); // State to handle errors
+  const [loading, setLoading] = useState(true); // State for loading indicator
+  const [updateExamId, setUpdateExamId] = useState(null);
 
-  const fetchExams = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(firedb, "exams"));
-      const examsArray = [];
-      querySnapshot.forEach((doc) => {
-        examsArray.push({ id: doc.id, ...doc.data() });
-      });
-      setExams(examsArray);
-    } catch (error) {
-      toast.error("Failed to fetch exams.");
-    }
-  };
+  const { data: allexam } = useExams();
 
-  const fetchBatches = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(firedb, "batches"));
-      const batchesArray = [];
-      querySnapshot.forEach((doc) => {
-        batchesArray.push({ id: doc.id, ...doc.data() });
-      });
-      console.log("Batches:", batchesArray);
-      setBatchArray(batchesArray);
-    } catch (error) {
-      toast.error("Failed to fetch batches.");
-    }
-  };
-
-  useEffect(() => {
-    fetchBatches();
-    fetchExams();
-  }, []);
+  const { data, isLoading } = useBatches();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newExam = { examName, batch, topics, examDate, additionalInfo };
 
     if (isEditing) {
-      const examRef = doc(firedb, "exams", exams[editingIndex].id);
-      await updateDoc(examRef, newExam);
-      const updatedExams = [...exams];
-      updatedExams[editingIndex] = { ...newExam, id: exams[editingIndex].id };
-      setExams(updatedExams);
+      const examToEdit = {
+        additionalInfo: additionalInfo,
+        examDate: examDate,
+        examName: examName,
+        topics: topics,
+        batch: batch._id,
+      };
+
+      axios
+        .put(`http://localhost:3000/api/exam/${updateExamId}`, examToEdit)
+        .then((res) => {
+          console.log("exam response: ", res);
+        })
+        .catch((err) => {
+          console.log("exam error: ", err);
+        });
+
       setIsEditing(false);
     } else {
-      const docRef = await addDoc(collection(firedb, "exams"), newExam);
-      setExams([...exams, { id: docRef.id, ...newExam }]);
+      const newExam = { examName, batch, topics, examDate, additionalInfo };
+
+      axios
+        .post("http://localhost:3000/api/exam", newExam)
+        .then((res) => {
+          console.log("exam response: ", res);
+        })
+        .catch((err) => {
+          console.log("exam error: ", err);
+        });
     }
 
     resetForm();
@@ -79,15 +76,16 @@ const ExamCreate = () => {
     setExams(newExams);
   };
 
-  const handleEdit = (index) => {
-    const examToEdit = exams[index];
-    setExamName(examToEdit.examName);
-    setBatch(examToEdit.batch);
-    setTopics(examToEdit.topics);
-    setExamDate(examToEdit.examDate);
-    setAdditionalInfo(examToEdit.additionalInfo);
+  const handleEdit = (exam) => {
+    const convertedDate = new Date(exam.examDate).toISOString().split("T")[0];
+
+    setUpdateExamId(exam._id);
+    setExamName(exam.examName);
+    setBatch(exam.batch);
+    setTopics(exam.topics);
+    setExamDate(convertedDate);
+    setAdditionalInfo(exam.additionalInfo);
     setIsEditing(true);
-    setEditingIndex(index);
   };
 
   const resetForm = () => {
@@ -133,9 +131,7 @@ const ExamCreate = () => {
             <select
               id="batch"
               aria-placeholder="Select batch"
-              onChange={(e) =>
-                setBatch(batchArray.find((b) => b.id === e.target.value))
-              }
+              onChange={(e) => setBatch(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             >
@@ -143,8 +139,8 @@ const ExamCreate = () => {
                 Select batch
               </option>
 
-              {batchArray.map((batch) => (
-                <option value={batch.id} key={batch.id}>
+              {data?.map((batch) => (
+                <option value={batch._id} key={batch._id}>
                   {batch.year} {batch.day} {batch.medium}
                 </option>
               ))}
@@ -210,9 +206,9 @@ const ExamCreate = () => {
           Created Exams
         </h2>
         <ul>
-          {exams.map((exam, index) => (
+          {allexam?.map((exam, index) => (
             <li
-              key={exam.id}
+              key={exam._id}
               className="bg-gray-100 p-4 mb-3 rounded-lg shadow"
             >
               <div className="mb-2">
@@ -234,7 +230,7 @@ const ExamCreate = () => {
               </div>
               <div className="flex justify-end">
                 <button
-                  onClick={() => handleEdit(index)}
+                  onClick={() => handleEdit(exam)}
                   className="mr-2 bg-yellow-400 text-white py-1 px-3 rounded-lg shadow hover:bg-yellow-500 transition"
                 >
                   Edit

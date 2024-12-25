@@ -7,6 +7,7 @@ const session = require("express-session");
 const auth = require("./routes/auth");
 const users = require("./routes/users");
 const batch = require("./routes/batch");
+const exam = require("./routes/exam");
 
 const mongo_url = process.env.MONGO_URL;
 
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use("/api/auth", auth);
 app.use("/api/users", users);
 app.use("/api/batch", batch);
+app.use("/api/exam", exam);
 
 app.use(
   session({
