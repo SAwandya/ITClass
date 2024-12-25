@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { firedb } from "../FireBase/Firebase";
-import { collection, getDocs } from "firebase/firestore";
+import axios from "axios";
 
 const AddResult = () => {
   const [batches, setBatches] = useState([]);
@@ -10,124 +9,80 @@ const AddResult = () => {
   const [selectedExam, setSelectedExam] = useState("");
   const [students, setStudents] = useState([]);
   const [studentsArray, setStudentsArray] = useState([]);
-  // const[filterdStudents, setFilteredStudents] = useState([]);
   const [marks, setMarks] = useState({});
   const [selectedBName, setSelectedBName] = useState("");
 
+  // Fetch batches from the backend
   const fetchBatches = async () => {
     try {
-      const querySnapshot = await getDocs(collection(firedb, "batches"));
-      const batchesArray = [];
-      querySnapshot.forEach((doc) => {
-        batchesArray.push({ id: doc.id, ...doc.data() });
-      });
-      setBatches(batchesArray);
+      const response = await axios.get("http://localhost:3000/api/batch");
+      setBatches(response.data); // Assuming response.data contains the batch array
     } catch (error) {
       console.error("Failed to fetch batches:", error);
     }
   };
 
+  // Fetch exams from the backend
   const fetchExams = async () => {
     try {
-      const querySnapshot = await getDocs(collection(firedb, "exams"));
-      const examsArray = [];
-      querySnapshot.forEach((doc) => {
-        examsArray.push({ id: doc.id, ...doc.data() });
-      });
-      setExamsArray(examsArray);
+      const response = await axios.get("http://localhost:3000/api/exam");
+      setExamsArray(response.data); // Assuming response.data contains the exams array
     } catch (error) {
       console.error("Failed to fetch exams:", error);
     }
   };
 
+  // Fetch students from the backend
   const fetchstudentsData = async () => {
-    try{
-      const querySnapshot = await getDocs(collection(firedb, "students"));
-      const studentsArray = [];
-      querySnapshot.forEach((doc) => {
-        studentsArray.push({ id: doc.id, ...doc.data() });
-      });
-      console.log("Fetched students:", studentsArray); // Add this log
-      setStudentsArray(studentsArray);
-      // return studentsArray;
-    }catch(error){
+    try {
+      const response = await axios.get("http://localhost:3000/api/users");
+      setStudentsArray(response.data); // Assuming response.data contains the students array
+    } catch (error) {
       console.error("Failed to fetch students:", error);
     }
-  }
+  };
 
   useEffect(() => {
     fetchBatches();
     fetchExams();
     fetchstudentsData();
   }, []);
-  useEffect(() => {
-    console.log("Selected batch updated:", selectedBatch);
-  }, [selectedBatch]); // Log whenever selectedBatch changes
-
 
   const handleBatchChange = (e) => {
     const batchId = e.target.value;
-    console.log("batchID: ", batchId);
 
-    // Find the selected batch object from the batches array
-    const selectedBatch = batches.find(batch => batch.id === batchId);
-
+    const selectedBatch = batches.find((batch) => batch._id === batchId);
     if (selectedBatch) {
-      const selectedBatchName = `${selectedBatch.year}-${selectedBatch.day}-${selectedBatch.medium || ''}`;
-      console.log("selectedBatchName:", selectedBatchName);
-
-      // Update the selected batch state with the batch ID (not the batch name)
+      const selectedBatchName = `${selectedBatch.year}-${selectedBatch.day}-${
+        selectedBatch.medium || ""
+      }`;
       setSelectedBatch(batchId);
-      setSelectedBName(selectedBatchName)
-      // Filter exams based on the selected batch id
+      setSelectedBName(selectedBatchName);
+
       const filteredExams = examsArray.filter(
-        (exam) => exam.batch?.id === batchId // Use batch ID to filter exams
+        (exam) => exam.batch?._id === batchId
       );
       setFilterdExams(filteredExams);
 
-      // Clear other selections and data
+      console.log("filteredExams", filteredExams);
+
       setSelectedExam("");
-      setStudents([]); // Clear students when batch changes
-      setMarks({}); // Clear marks when batch changes
+      setStudents([]);
+      setMarks({});
     }
   };
 
-const handleExamChange = (e) => {
-  const examId = e.target.value;
-  setSelectedExam(examId);
+  const handleExamChange = (e) => {
+    const examId = e.target.value;
+    setSelectedExam(examId);
 
-  // Check if studentsArray is populated and selectedBatch exists
-  if (studentsArray && selectedBName) {
-    // Filter students based on the selected batch ID, not batch name
-    console.log("students array: ", studentsArray)
-    console.log("selecetd B Name: ", selectedBName)
-    const studentsForBatch = studentsArray.filter(
-      (student) => student.batch === selectedBName // Ensure batch ID is used for comparison
-    );
-
-    console.log(studentsForBatch); // Log filtered students
-    setStudents(studentsForBatch); // Set filtered students
-  }
-};
-
-
-
-
-  // const handleExamChange = (e) => {
-  //   const exam = e.target.value;
-  //   setSelectedExam(exam);
-  //   // setStudents(studentsArray[selectedBatch]);
-  //   // Check if studentsArray is populated and selectedBatch exists
-  //   if (studentsArray && selectedBatch) {
-  //     const studentsForBatch = studentsArray.filter(
-  //       (student) => student.batch === selectedBatch
-  //     );
-  //     console.log(studentsArray)
-  //     console.log(selectedBatch)
-  //     console.log(studentsForBatch)
-  //     setStudents(studentsForBatch);
-  //   }
-  // };
+    if (studentsArray && selectedBName) {
+      const studentsForBatch = studentsArray.filter(
+        (student) => student.batch === selectedBName
+      );
+      setStudents(studentsForBatch);
+    }
+  };
 
   const handleMarksChange = (userID, value) => {
     setMarks({
@@ -136,10 +91,21 @@ const handleExamChange = (e) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitted Marks:", marks);
-    // Add submission logic here
+
+    const resultData = {
+      examId: selectedExam,
+      marks: marks,
+    };
+
+    try {
+      await axios.post("http://localhost:5000/results", resultData);
+      alert("Marks submitted successfully!");
+    } catch (error) {
+      console.error("Failed to submit marks:", error);
+      alert("Error submitting marks.");
+    }
   };
 
   return (
@@ -168,7 +134,7 @@ const handleExamChange = (e) => {
                 Select a batch
               </option>
               {batches.map((batch) => (
-                <option key={batch.id} value={batch.id}>
+                <option key={batch._id} value={batch._id}>
                   {batch.year} {batch.day} {batch.medium}
                 </option>
               ))}
@@ -193,8 +159,8 @@ const handleExamChange = (e) => {
                 <option value="" disabled>
                   Select an exam
                 </option>
-                {filterdExams.map((exam) => (
-                  <option key={exam.id} value={exam.id}>
+                {filterdExams?.map((exam) => (
+                  <option key={exam._id} value={exam._id}>
                     {exam.examName} ({exam.examDate})
                   </option>
                 ))}
@@ -204,7 +170,9 @@ const handleExamChange = (e) => {
 
           {selectedExam && students.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-4 text-gray-700">Students</h3>
+              <h3 className="text-xl font-semibold mb-4 text-gray-700">
+                Students
+              </h3>
               {students.map((student) => (
                 <div key={student.userID} className="flex items-center mb-4">
                   <span className="flex-1 text-gray-600">

@@ -29,10 +29,12 @@ const ExamCreate = () => {
 
   const { data: allexam } = useExams();
 
-  const { data, isLoading } = useBatches();
+  const { data, isLoading, refetch } = useBatches();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log("editing batch: ", batch);
 
     if (isEditing) {
       const examToEdit = {
@@ -40,13 +42,14 @@ const ExamCreate = () => {
         examDate: examDate,
         examName: examName,
         topics: topics,
-        batch: batch._id,
+        batch: batch,
       };
 
-      axios
+      await axios
         .put(`http://localhost:3000/api/exam/${updateExamId}`, examToEdit)
         .then((res) => {
           console.log("exam response: ", res);
+          refetch();
         })
         .catch((err) => {
           console.log("exam error: ", err);
@@ -56,10 +59,13 @@ const ExamCreate = () => {
     } else {
       const newExam = { examName, batch, topics, examDate, additionalInfo };
 
-      axios
+      console.log("new exam: ", newExam);
+
+      await axios
         .post("http://localhost:3000/api/exam", newExam)
         .then((res) => {
           console.log("exam response: ", res);
+          refetch();
         })
         .catch((err) => {
           console.log("exam error: ", err);
@@ -70,10 +76,11 @@ const ExamCreate = () => {
   };
 
   const handleDelete = async (id) => {
-    axios
+    await axios
       .delete(`http://localhost:3000/api/exam/${id}`)
       .then((res) => {
         console.log("exam response: ", res);
+        refetch();
       })
       .catch((err) => {
         console.log("exam error: ", err);
@@ -82,6 +89,8 @@ const ExamCreate = () => {
 
   const handleEdit = (exam) => {
     const convertedDate = new Date(exam.examDate).toISOString().split("T")[0];
+
+    console.log("batch: ", exam.batch);
 
     setUpdateExamId(exam._id);
     setExamName(exam.examName);
@@ -99,6 +108,11 @@ const ExamCreate = () => {
     setExamDate("");
     setAdditionalInfo("");
   };
+
+  const handleBatchChange = (batch) => {
+    console.log("batch: ", batch);
+    setBatch(batch);
+  }
 
   return (
     <div className="flex flex-col lg:flex-row justify-center items-start min-h-screen p-8">
@@ -135,7 +149,7 @@ const ExamCreate = () => {
             <select
               id="batch"
               aria-placeholder="Select batch"
-              onChange={(e) => setBatch(e.target.value)}
+              onChange={(e) => handleBatchChange(e.target.value)} 
               className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             >

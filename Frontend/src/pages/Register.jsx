@@ -22,15 +22,10 @@ const Register = () => {
 
   const fetchBatches = async () => {
     try {
-      const querySnapshot = await getDocs(collection(firedb, "batches"));
-      const batchesArray = [];
-      querySnapshot.forEach((doc) => {
-        batchesArray.push({ id: doc.id, ...doc.data() });
-      });
-      setBatchArray(batchesArray);
+      const response = await axios.get("http://localhost:3000/api/batch");
+      setBatchArray(response.data); // Assuming response.data contains the batch array
     } catch (error) {
       console.error("Failed to fetch batches:", error);
-      toast.error("Failed to fetch batches.");
     }
   };
 
@@ -225,10 +220,10 @@ const Register = () => {
                 <option value="" disabled>
                   Select your batch
                 </option>
-                {batches.map((batch) => (
+                {batches?.map((batch) => (
                   <option
                     value={`${batch.year}-${batch.day}-${batch.medium}`}
-                    key={batch.id}
+                    key={batch._id}
                   >
                     {batch.year} {batch.day} {batch.medium}
                   </option>

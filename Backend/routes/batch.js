@@ -72,7 +72,7 @@ router.put("/:id", async (req, res) => {
 // Delete a batch by ID
 router.delete("/:id", async (req, res) => {
   try {
-    const batch = await Batch.findByIdAndRemove(req.params.id);
+    const batch = await Batch.findByIdAndDelete(req.params.id);
     if (!batch) return res.status(404).send("Batch not found");
     res.send(batch);
   } catch (err) {

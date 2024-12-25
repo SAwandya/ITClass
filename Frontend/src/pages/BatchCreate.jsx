@@ -16,9 +16,9 @@ const CreateBatch = () => {
   const [day, setDay] = useState("");
   const [medium, setMedium] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null); // Track which index is being edited
+  const [updatedBatchId, setUpdatedBatchId] = useState(null);
 
-  const { data, isLoading } = useBatches();
+  const { data, isLoading, refetch } = useBatches();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,37 +27,57 @@ const CreateBatch = () => {
     console.log(batch);
 
     if (isEditing) {
-      // If editing, update the existing batch in Firestore
-      const batchRef = doc(firedb, "batches", batches[editingIndex].id);
-      await updateDoc(batchRef, batch);
-      const updatedBatches = [...batches];
-      updatedBatches[editingIndex] = { ...batch, id: batches[editingIndex].id };
-      setBatches(updatedBatches);
+      const updatedBatch = {
+        year,
+        day,
+        medium,
+      };
+
+      axios
+        .put(`http://localhost:3000/api/batch/${updatedBatchId}`, updatedBatch)
+        .then((res) => {
+          console.log("batch response: ", res);
+          refetch();
+        })
+        .catch((err) => {
+          console.log("batch error: ", err);
+        });
+
       setIsEditing(false);
     } else {
       // If creating a new batch
-      const res = await axios.post("http://localhost:3000/api/batch", batch);
-      console.log("batch response: ", res);
-      // setBatches([...batches, { id: docRef.id, ...batch }]);
+      await axios.post("http://localhost:3000/api/batch", batch).then((res) => {
+        console.log("batch response: ", res);
+        refetch();
+      }).catch((err) => {
+        console.log("batch error: ", err);
+      });
+      
+      setBatches([...batches, res.data]); // Add the new batch to the list
     }
     resetForm(); // Reset form fields
   };
 
-  const handleDelete = async (index) => {
-    // Delete batch from Firestore
-    const batchToDelete = batches[index];
-    await deleteDoc(doc(firedb, "batches", batchToDelete.id));
-    const newBatches = batches.filter((_, i) => i !== index);
-    setBatches(newBatches);
+  const handleDelete = async (id) => {
+    axios
+      .delete(`http://localhost:3000/api/batch/${id}`)
+      .then((res) => {
+        // Remove the batch from the list
+        const updatedBatches = batches.filter((batch) => batch.id !== id);
+        setBatches(updatedBatches);
+        refetch();
+      })
+      .catch((err) => {
+        console.log("batch error: ", err);
+      });
   };
 
-  const handleEdit = (index) => {
-    const batchToEdit = batches[index];
-    setYear(batchToEdit.year);
-    setDay(batchToEdit.day);
-    setMedium(batchToEdit.medium);
+  const handleEdit = (batch) => {
+    setUpdatedBatchId(batch._id);
+    setYear(batch.year);
+    setDay(batch.day);
+    setMedium(batch.medium);
     setIsEditing(true); // Set editing mode to true
-    setEditingIndex(index); // Save the index of the batch being edited
   };
 
   const resetForm = () => {
@@ -162,13 +182,13 @@ const CreateBatch = () => {
               <span>{`${batch.year} ${batch.day} ${batch.medium} Medium`}</span>
               <div>
                 <button
-                  onClick={() => handleEdit(index)}
+                  onClick={() => handleEdit(batch)}
                   className="mr-2 bg-yellow-400 text-white py-1 px-3 mb-2 rounded-lg shadow hover:bg-yellow-500 transition"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(index)}
+                  onClick={() => handleDelete(batch._id)}
                   className="bg-red-500 text-white py-1 px-3 rounded-lg shadow hover:bg-red-600 transition"
                 >
                   Delete
