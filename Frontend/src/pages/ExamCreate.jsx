@@ -69,11 +69,15 @@ const ExamCreate = () => {
     resetForm();
   };
 
-  const handleDelete = async (index) => {
-    const examToDelete = exams[index];
-    await deleteDoc(doc(firedb, "exams", examToDelete.id));
-    const newExams = exams.filter((_, i) => i !== index);
-    setExams(newExams);
+  const handleDelete = async (id) => {
+    axios
+      .delete(`http://localhost:3000/api/exam/${id}`)
+      .then((res) => {
+        console.log("exam response: ", res);
+      })
+      .catch((err) => {
+        console.log("exam error: ", err);
+      });
   };
 
   const handleEdit = (exam) => {
@@ -236,7 +240,7 @@ const ExamCreate = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(index)}
+                  onClick={() => handleDelete(exam._id)}
                   className="bg-red-500 text-white py-1 px-3 rounded-lg shadow hover:bg-red-600 transition"
                 >
                   Delete

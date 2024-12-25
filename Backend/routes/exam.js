@@ -88,7 +88,7 @@ router.put("/:id", async (req, res) => {
 // Delete an exam by ID
 router.delete("/:id", async (req, res) => {
   try {
-    const exam = await Exam.findByIdAndRemove(req.params.id);
+    const exam = await Exam.findByIdAndDelete(req.params.id);
     if (!exam) return res.status(404).send("Exam not found");
     res.send(exam);
   } catch (err) {
