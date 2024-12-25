@@ -8,6 +8,7 @@ const auth = require("./routes/auth");
 const users = require("./routes/users");
 const batch = require("./routes/batch");
 const exam = require("./routes/exam");
+const result = require("./routes/result");
 
 const mongo_url = process.env.MONGO_URL;
 
@@ -25,6 +26,7 @@ app.use("/api/auth", auth);
 app.use("/api/users", users);
 app.use("/api/batch", batch);
 app.use("/api/exam", exam);
+app.use("/api/result", result);
 
 app.use(
   session({

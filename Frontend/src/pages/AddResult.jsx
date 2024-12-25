@@ -97,10 +97,13 @@ const AddResult = () => {
     const resultData = {
       examId: selectedExam,
       marks: marks,
+      batchId: selectedBatch,
     };
 
+    console.log("resultData", resultData);
+
     try {
-      await axios.post("http://localhost:5000/results", resultData);
+      await axios.post("http://localhost:3000/api/result", resultData);
       alert("Marks submitted successfully!");
     } catch (error) {
       console.error("Failed to submit marks:", error);
@@ -174,15 +177,15 @@ const AddResult = () => {
                 Students
               </h3>
               {students.map((student) => (
-                <div key={student.userID} className="flex items-center mb-4">
+                <div key={student.userId} className="flex items-center mb-4">
                   <span className="flex-1 text-gray-600">
-                    {student.userID} - {student.name}
+                    {student.userId} - {student.name}
                   </span>
                   <input
                     type="number"
-                    value={marks[student.userID] || ""}
+                    value={marks[student._id] || ""}
                     onChange={(e) =>
-                      handleMarksChange(student.userID, e.target.value)
+                      handleMarksChange(student._id, e.target.value)
                     }
                     className="w-32 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                     placeholder="Marks"
